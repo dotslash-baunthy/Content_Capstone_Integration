@@ -1,0 +1,26 @@
+docker build -f Dockerfile -t fsd-ui .
+
+docker build -f Dockerfile -t iitr-ui .
+
+docker run -it -d -p 8081:80 iitr-ui:latest
+
+docker run -it --name fsd-ui --network="host" -p 8080:8080 fsd-ui:latest
+
+docker run -d -p 8080:8080 fsd-ui:latest
+
+docker run -it -d -p 80:80 fsd-ui:latest
+
+docker run -it -d --name fsd-ui -p 8080:8080 fsd-ui:latest
+
+docker stop fsd-ui
+
+docker-machine ip
+run :- --network=host
+
+docker exec -it condescending_galois /bin/sh
+
+------------------------------------------
+
+docker build -f Dockerfile -t fsd-ui .
+
+docker run -it -d -p 3000:3000 fsd-ui:latest

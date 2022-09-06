@@ -1,0 +1,81 @@
+
+
+
+Deployment step.
+
+for detail steps with screenshots, check :- docs/IITR-FSD-Content Integration and Deployment ECS Terraform Pipeline v1.0
+
+S. no		
+		
+0	Install aws-cli	
+		
+	AWS configure	
+	-set access key id	
+	-set secret access key	
+	-set default region	
+		
+		
+1	cd jenkins-server and run command terraform init	
+2	Run terraform apply	
+3	cd ../ecs-ecr and run command terraform init	
+4	terraform apply	
+5	login into jenkins-server and run command to get auto generated initialAdminPassword	
+	    	sudo cat /var/lib/jenkins/secrets/initialAdminPassword
+6	In browser open port 8080 of jenkins-server public ip and use the initialAdminPassword to login.	
+7	Install suggested plugins	
+8	In browser Create new user	
+		username : admin
+		password : admin
+9	In Jenkins-server Install plugins by running below commands	
+		wget http://localhost:8080/jnlpJars/jenkins-cli.jar
+		java -jar jenkins-cli.jar -s http://localhost:8080/ -auth admin:admin install-plugin aws-credentials:191.vcb_f183ce58b_9
+		java -jar jenkins-cli.jar -s http://localhost:8080/ -auth admin:admin install-plugin docker-workflow:521.v1a_a_dd2073b_2e
+		java -jar jenkins-cli.jar -s http://localhost:8080/ -auth admin:admin install-plugin amazon-ecr:1.73.v741d474abe74
+		java -jar jenkins-cli.jar -s http://localhost:8080/ -auth admin:admin install-plugin pipeline-aws:1.43
+		sudo service jenkins restart
+10	In browser, to go Manage Jenkins>ManageCredentails, Click “(global)” “Add credentials”.	
+11	Create AWS new credentials with below values	
+		Kind: AWS Credentials
+		Scope: Global
+		ID: demo-admin-user
+		AccessKeyId: <AccessKeyId>
+		Secret Access Key: <Secret Access Key>
+12	Create Github credentials with below values, Click on Add credentials	
+		Kind: username with password
+		Scope: Global
+		Username: <github account username>
+		Password: <github account password>
+		ID: <any value>
+13	Create jenkins job. Click on new Item	
+		name: demo-job
+		item: pipeline
+14	Job configuration	
+		Check “Discard old builds”, max = 4
+		Check “Github project”, project url = https://github.com/anshulv1401/emo-nodejs-app
+		Under build trigger, check “Github hook trigger for GitScm polling”
+		Under pipeline, select definition as “Pipeline script for SCM”
+		Under scm select “Git”
+		Under repository, give URL for git project. Example: “https://github.com/anshulv1401/emo-nodejs-app.
+		For credentails selected already stored git credentials
+		Save
+15	Integrate Github and Jenkins	
+		In github repo, under settings, select weekhooks
+		Click on Add webhook
+		Give payload url as “<jenkin-server-url>:8080/github-webhook/”
+		example “http://44.204.129.138:8080//github-webhook/”
+16	Jenkinsfile configuration, update the jenkins file in github repo. And push the changes	
+		AWS_ACCOUNT_ID="101075526478"
+		AWS_DEFAULT_REGION="us-east-1"
+		CLUSTER_NAME="ecs-demo-cluster-test"
+		SERVICE_NAME="ecs-demo-service-test"
+		TASK_DEFINITION_NAME="ecs-terraform-demo"
+		DESIRED_COUNT="4"
+		IMAGE_REPO_NAME="ecs-demo-test"
+		registryCredential = "demo-admin-user"
+17	In browser goto jenkins-job	
+		On git push build should have automatically triggered
+18	Test the app	
+		Go to load balancers, and copy DNSName, and paste it in the browser
+19	Clean up	
+		In AWS console, goto Amazon ECR > Repositories >  ecs-demo-test, and delete all the images
+		Navigate back to your local termical, under folder esc-ecr and jenkins-server, run command “terraform destroy”
